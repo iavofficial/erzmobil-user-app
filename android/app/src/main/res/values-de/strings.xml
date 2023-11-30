@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_title_journey_update">Fahrtupdate</string>
+    <string name="notification_message_journey_update">Die Fahrt am %1$s wurde aktualisiert.</string>
+    <string name="notification_title_journey_cancelled">Fahrt storniert</string>
+    <string name="notification_message_journey_cancelled">Die Fahrt am %1$s wurde storniert.</string>
+    <string name="notification_title_system_information">News</string>
+    <string name="notification_message_system_information">%1$s</string>
+    <string name="notification_title_delay_information">Verspätungshinweis</string>
+    <string name="notification_message_delay_information">Die Fahrt am %1$s verspätet sich um %2$s</string>
+    <string name="notification_title_journey_reminder">Erinnerung an nächste Fahrt</string>
+    <string name="notification_message_journey_reminder">Die Fahrt von %1$s startet um %2$s</string>
+</resources>

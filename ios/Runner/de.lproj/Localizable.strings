@@ -1,0 +1,15 @@
+/* 
+  Localizable.strings
+  Runner
+  
+*/
+"notificationTitleJourneyUpdate" = "Fahrtupdate";
+"notificationMessageJourneyUpdate" = "Die Fahrt am %@ wurde aktualisiert.";
+"notificationTitleJourneyCancelled" = "Fahrt storniert";
+"notificationMessageJourneyCancelled" = "Die Fahrt am %@ wurde storniert.";
+"notificationTitleSystemInformation" = "News";
+"notificationMessageSystemInformation" = "%@";
+"notificationTitleDelayInformation" = "Verspätungshinweis";
+"notificationMessageDelayInformation" = "Die Fahrt am %@ verspätet sich um %@";
+"notificationTitleJourneyReminder" = "Erinnerung an nächste Fahrt";
+"notificationMessageJourneyReminder" = "Die Fahrt von %@ startet um %@";

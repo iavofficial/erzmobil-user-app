@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_title_journey_update">Journey updated</string>
+    <string name="notification_message_journey_update">The journey from %1$s was updated.</string>
+    <string name="notification_title_journey_cancelled">Journey cancelled</string>
+    <string name="notification_message_journey_cancelled">The journey from %1$s was cancelled.</string>
+    <string name="notification_title_system_information">News</string>
+    <string name="notification_message_system_information">%1$s</string>
+    <string name="notification_title_delay_information">Delay hint</string>
+    <string name="notification_message_delay_information">The journey from %1$s is delayed by %2$s</string>
+    <string name="notification_title_journey_reminder">Next journey reminder</string>
+    <string name="notification_message_journey_reminder">The journey from %1$s starts at %2$s</string>
+</resources>

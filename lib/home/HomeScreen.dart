@@ -131,6 +131,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return Scaffold(
         appBar: AppBar(
           centerTitle: true,
+          foregroundColor: CustomColors.white,
           flexibleSpace: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(

@@ -56,6 +56,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
         ),
         automaticallyImplyLeading: !User().isProcessing,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         title: Text(AppLocalizations.of(context)!.forgotPassword),
         iconTheme:
             IconThemeData(color: CustomColors.mint, opacity: 1.0, size: 40.0),

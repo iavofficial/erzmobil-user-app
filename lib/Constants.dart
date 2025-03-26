@@ -9,14 +9,14 @@ class Strings {
   Strings._();
 
   static const String appName = 'ERZmobil';
-  static const String cancellationFee = "";
+  static const String cancellationFee = "0,50€";
   static const int cancellationHours = 24;
 
-  static const String assetPathBusStop = 'assets/ic_haltestelle.png';
   static const String assetPathBus = 'assets/ic_bus.png';
   static const String assetPathLogo = 'assets/Logo_4c_mitverlauf.png';
   static const String assetPathRoute = 'assets/outline_route_black_36dp.png';
-  static const String assetPathLocationMarker = 'assets/ic_locationmarker.png';
+  static const String assetPathLocationMarker = 'assets/location_on.png';
+  static const String assetPathLocationEndMarker = 'assets/flag_fill.png';
 
   static const String prefKeyCode = 'verificationCodeMode';
 

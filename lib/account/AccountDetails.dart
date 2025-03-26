@@ -72,6 +72,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
           ),
           automaticallyImplyLeading: !User().isProcessing,
           centerTitle: true,
+          foregroundColor: CustomColors.white,
           title: Text(AppLocalizations.of(context)!.accountDetails),
           iconTheme:
               IconThemeData(color: CustomColors.mint, opacity: 1.0, size: 40.0),

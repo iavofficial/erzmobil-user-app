@@ -61,7 +61,14 @@ class JourneyList extends BackendResponse {
     if (completedJourneys == null) {
       return <Journey>[];
     } else {
-      return completedJourneys!;
+      List<Journey> sortedCompletedJourneys = completedJourneys!;
+      sortedCompletedJourneys.sort((a, b) {
+        if (a.departureTime == null && b.departureTime == null) return 0;
+        if (a.departureTime == null) return -1;
+        if (b.departureTime == null) return 1;
+        return a.departureTime!.compareTo(b.departureTime!);
+      });
+      return sortedCompletedJourneys.reversed.toList();
     }
   }
 

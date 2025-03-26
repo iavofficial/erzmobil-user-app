@@ -39,6 +39,7 @@ class _ResetScreenState extends State<ResetScreen> {
         ),
         automaticallyImplyLeading: !User().isProcessing,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         title: Text(AppLocalizations.of(context)!.forgotPasswordTitle),
         leading: IconButton(
           onPressed: () {
@@ -138,16 +139,19 @@ class _ResetScreenState extends State<ResetScreen> {
         builder: (BuildContext context) =>
             ChangeNotifierProvider.value(value: User(), child: VerifyScreen()),
       ));
+
+      _showDialog(AppLocalizations.of(context)!.dialogSendMailText,
+          AppLocalizations.of(context)!.verifyCodeInfoLabel, context);
+
+      return;
     }
+
     if (state == RequestState.ERROR_FAILED_NO_INTERNET) {
       _showDialog(AppLocalizations.of(context)!.dialogErrorTitle,
           AppLocalizations.of(context)!.dialogNoInternetErrorText, context);
     } else if (state == RequestState.ERROR_USER_UNKNOWN) {
       _showDialog(AppLocalizations.of(context)!.dialogErrorTitle,
           AppLocalizations.of(context)!.dialogUserUnknownErrorText, context);
-    } else {
-      _showDialog(AppLocalizations.of(context)!.dialogErrorTitle,
-          AppLocalizations.of(context)!.dialogGenericErrorText, context);
     }
   }
 

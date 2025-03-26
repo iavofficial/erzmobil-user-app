@@ -3,6 +3,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:erzmobil/Constants.dart';
 
+// Currently not used!
 class ImprintScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

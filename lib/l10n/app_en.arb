@@ -117,6 +117,7 @@
     "negativeTimeInPast": "The desired journey time is too short for the Erzmobil. Please try a later arrival or departure time.",
     "negativeNoCommunity": "The booking request is inadmissible, since Erzmobil offers only trips within the municipality of Zwönitz.",
     "negativeNoStopInArea": "The booking request is inadmissible, since the start or end point are not known stops.",
+    "negativeNoSeatsSelected": "The entries are invalid as at least one seat must be selected. The number of seats has been reset.",
     "negativeSameStops": "The booking request is inadmissible, since the start and end point are identical.",
     "negativeSameFavoriteStops": "The input is inadmissible, since the start and end point are identical.",
     "negativeNoRouting": "ERZmobil is unfortunately booked at this time. Please try another arrival or departure time.",
@@ -241,5 +242,10 @@
     "suggestAlternativesText": "Flexible booking time",
     "suggestAlternativesEarlier": "earlier",
     "suggestAlternativesLater": "later",
-    "suggestAlternativesNo": "no"
+    "suggestAlternativesNo": "no",
+    "vehicle": "Vehicle",
+    "electrifiedBus": "electric",
+    "autonomousShuttle": "autonomous",
+    "other": "other",
+    "qrCodeNeedHelp": "Do you need help?"
 }

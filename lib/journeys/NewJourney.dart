@@ -60,6 +60,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
   String? suggestAlternativesOption;
 
   List<int> seatOptions = [0, 1, 2, 3, 4, 5, 6];
+  late List<int> allowedSeatOptions;
   List<int> seatsWheelchair = [0, 1];
   List<String> journeyOptions = [];
   List<TicketType> journeyTypes = [];
@@ -68,6 +69,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
   @override
   void initState() {
     journeyTypes = User().getTicketTypes();
+    allowedSeatOptions = seatOptions.sublist(1, seatOptions.length - 1);
     suggestAlternativesOption = "";
     startDate = DateTime.now();
     startTime = TimeOfDay.now();
@@ -125,6 +127,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
         ),
         automaticallyImplyLeading: true,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         actions: [],
         title: Text(widget.isFavoriteSelection
             ? AppLocalizations.of(context)!.addNewFavoriteJourney
@@ -410,8 +413,8 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
                   ),
                   Flexible(
                     flex: 3,
-                    child: _getSeatsDropDownWidget(seatOptions, selectedSeats,
-                        (int value) {
+                    child: _getSeatsDropDownWidget(
+                        allowedSeatOptions, selectedSeats, (int value) {
                       setState(() {
                         selectedSeats = value;
                       });
@@ -441,6 +444,21 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
                     child: _getSeatsDropDownWidget(
                         seatsWheelchair, selectedWheelChairs, (int value) {
                       setState(() {
+                        if (value > 0) {
+                          allowedSeatOptions = seatOptions;
+                        } else {
+                          if (selectedSeats == 0) {
+                            selectedSeats = 1;
+                            _showDialog(
+                                AppLocalizations.of(context)!.dialogInfoTitle,
+                                AppLocalizations.of(context)!
+                                    .negativeNoSeatsSelected,
+                                context,
+                                null);
+                          }
+                          allowedSeatOptions =
+                              seatOptions.sublist(1, seatOptions.length - 1);
+                        }
                         selectedWheelChairs = value;
                       });
                     }),
@@ -673,6 +691,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
         null,
         ticketType,
         null,
+        null,
         favoriteName: _favoriteName);
     if (!widget.isNewFavorite) {
       await User().deleteFavoriteJourney(widget.prefilledJourneyData!);
@@ -721,9 +740,10 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
           MaterialPageRoute(
               builder: (BuildContext context) => ChangeNotifierProvider.value(
                     value: User(),
-                    child: new JourneyDetailsScreen(
-                        currentJourneyId: result.item2.id,
-                        showButtonToMyJourneys: true),
+                    child: new JourneyDetailsScreen.singleJourney(
+                      currentJourneyId: result.item2.id,
+                      showButtonToMyJourneys: true,
+                    ),
                   )),
         );
 
@@ -807,6 +827,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
         null,
         null,
         ticketType,
+        null,
         null);
   }
 
@@ -904,6 +925,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
     return !isBlocked &&
         !User().isProcessing &&
         start != null &&
+        (selectedSeats > 0 || selectedWheelChairs > 0) &&
         destination != null;
   }
 
@@ -920,6 +942,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
       width: double.infinity,
       alignment: Alignment.centerRight,
       child: DropdownButton<String>(
+        dropdownColor: CustomColors.white,
         value: value,
         icon: const Icon(
           Icons.arrow_drop_down,
@@ -982,6 +1005,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
       width: double.infinity,
       alignment: Alignment.centerRight,
       child: DropdownButton<int>(
+        dropdownColor: CustomColors.white,
         value: value,
         icon: const Icon(
           Icons.arrow_drop_down,
@@ -1011,6 +1035,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
       width: double.infinity,
       alignment: Alignment.centerRight,
       child: DropdownButton<String>(
+        dropdownColor: CustomColors.white,
         value: value,
         icon: const Icon(
           Icons.arrow_drop_down,
@@ -1041,6 +1066,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
       width: double.infinity,
       alignment: Alignment.centerRight,
       child: DropdownButton<String>(
+        dropdownColor: CustomColors.white,
         value: value,
         icon: const Icon(
           Icons.arrow_drop_down,
@@ -1084,7 +1110,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  primary: CustomColors.marine, // button text color
+                  foregroundColor: CustomColors.marine, // button text color
                 ),
               ),
             ),
@@ -1111,7 +1137,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  primary: CustomColors.marine, // button text color
+                  backgroundColor: CustomColors.marine, // button text color
                 ),
               ),
             ),

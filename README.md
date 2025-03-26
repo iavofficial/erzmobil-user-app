@@ -43,6 +43,18 @@ The texts files can be found here: `lib/l10n`
 1. You must install the needed signing certificates and provisining profiles.
 2. Afterwards you can run `flutter build ipa` to produce an Xcode build archive (.xcarchive file) in the project's `build/ios/archive/` directory and an App Store app bundle (.ipa file) in `build/ios/ipa`.
 
+Further insights regarding Push: 
+It happened not only once, that Push Notification on a submitted app store version just didn't work. After successful submit to Appstoreconnect, an email from the Apple informed about the following:
+`...Missing Push Notification Entitlement - Your app appears to register with the Apple Push Notification service, but the app signature's entitlements do not include the 'aps-environment' entitlement....`
+
+It turned out that a setting in the Xcode project file `(CODE_SIGNING_ALLOWED = NO)` caused this to happen. Therefore, make sure `CODE_SIGNING_ALLOWED = YES`.
+For some reason, the CI config (Fastfile) had it set to NO and thus produced a xcarchive that would not support push. Signing a resulting xcarchive from CI was missing the entitlements completely.
+This lead to the mentioned email above.
+
+So if you ever come accross such a problem again, make sure you have set CODE_SIGNING_ALLOWED to YES. 
+
+Gitlab CI can be used to build a Release version. Take the resulting xcarchive and use Xcode to submit it to the App Store.
+
 ## WebApp
 1. Run `flutter build web` in the Terminal.
 2. Afterwards you can run 

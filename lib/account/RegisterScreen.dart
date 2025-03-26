@@ -82,6 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         automaticallyImplyLeading: !User().isProcessing,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         title: Text(AppLocalizations.of(context)!.signupTitle),
         leading: IconButton(
           onPressed: () {
@@ -171,10 +172,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       autocorrect: false,
                       enabled: !User().isProcessing,
                       decoration: new InputDecoration(
-                          labelText: AppLocalizations.of(context)!
-                              .placeholderFamilyName,
-                          labelStyle: CustomTextStyles.bodyBlack,
-                          errorMaxLines: 3),
+                        labelText:
+                            AppLocalizations.of(context)!.placeholderFamilyName,
+                        labelStyle: CustomTextStyles.bodyBlack,
+                        errorMaxLines: 3,
+                      ),
                       validator: (value) {
                         if (value!.isEmpty) {
                           return AppLocalizations.of(context)!

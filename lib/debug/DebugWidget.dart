@@ -53,6 +53,7 @@ class _DebugScreenState extends State<DebugScreen> {
           ),
           automaticallyImplyLeading: !User().isDebugProcessing,
           centerTitle: true,
+          foregroundColor: CustomColors.white,
           title: Text('Debug'),
           leading: IconButton(
             onPressed: () {

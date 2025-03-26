@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:erzmobil/debug/Logger.dart';
+import 'package:erzmobil/journeys/QrCodeScreen.dart';
 import 'package:erzmobil/model/Journey.dart';
 import 'package:erzmobil/model/RequestState.dart';
 import 'package:erzmobil/model/User.dart';
+import 'package:erzmobil/model/VehicleType.dart';
 import 'package:erzmobil/utils/Utils.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:erzmobil/Constants.dart';
@@ -13,16 +14,31 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'dart:core';
-
-import 'package:url_launcher/url_launcher.dart';
+import '../map/UserMap.dart';
 
 class JourneyDetailsScreen extends StatefulWidget {
-  const JourneyDetailsScreen(
+  JourneyDetailsScreen.singleJourney(
       {Key? key,
       required this.currentJourneyId,
+      this.selectedIndex = -1,
+      this.numberTotalJourneys = -1,
+      this.showSingleJourney = true,
       required this.showButtonToMyJourneys})
       : super(key: key);
+
+  JourneyDetailsScreen.multipleJourneys(
+      {Key? key,
+      required this.currentJourneyId,
+      required this.selectedIndex,
+      required this.numberTotalJourneys,
+      this.showSingleJourney = false,
+      required this.showButtonToMyJourneys})
+      : super(key: key);
+
   final int currentJourneyId;
+  final int selectedIndex;
+  final int numberTotalJourneys;
+  final bool showSingleJourney;
   final bool showButtonToMyJourneys;
 
   @override
@@ -31,10 +47,14 @@ class JourneyDetailsScreen extends StatefulWidget {
 
 class _JourneyDetailsState extends State<JourneyDetailsScreen> {
   Journey? currentJourney;
+  PageController? pageController;
+  int visibleIndex = -1;
+  final List<Journey> allJourneys = User().journeyList!.bookedJourneys!;
 
   @override
   Widget build(BuildContext context) {
     Logger.info("JourneyDetails.build");
+
     return Consumer<User>(
       builder: (context, user, child) => _buildWidgets(context),
     );
@@ -63,6 +83,19 @@ class _JourneyDetailsState extends State<JourneyDetailsScreen> {
 
   void _updateTour() {
     User().loadJourneys();
+  }
+
+  List<Widget> buildJourneys() {
+    List<Widget> journeyWidgets = List.empty(growable: true);
+    int numberJourneys = User().journeyList!.bookedJourneys!.length;
+    int index = 1;
+    for (var journey in User().journeyList!.bookedJourneys!) {
+      Widget w = _buildScaffoldContent(context, journey, index, numberJourneys);
+      index++;
+      journeyWidgets.add(w);
+    }
+    Logger.info(journeyWidgets.length.toString());
+    return journeyWidgets;
   }
 
   Future<void> _confirmRevokeDialog(BuildContext context) async {
@@ -129,40 +162,30 @@ class _JourneyDetailsState extends State<JourneyDetailsScreen> {
     });
   }
 
-  Future<void> _shareLocation(
-      BuildContext context, String lat, String lng) async {
-    Logger.debug("shareLocation: " + lat + ", " + lng);
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      assert(lat.isNotEmpty);
-      final params = <String, String>{
-        'lat': lat,
-        'lng': lng,
-      };
-
-      const platform = MethodChannel('erzmobil.native/share');
-      try {
-        await platform.invokeMethod('shareLocation', params);
-      } on PlatformException catch (e) {
-        _showDialog(AppLocalizations.of(context)!.dialogErrorTitle,
-            AppLocalizations.of(context)!.dialogGenericErrorText, context);
-        Logger.e("Sharing location failed");
-      }
-    } else {
-      String GOOGLE_MAPS_DIRECTIONS_URI =
-          "https://www.google.com/maps/dir/?api=1&destination=$lat,$lng";
-
-      if (!await launch(
-        GOOGLE_MAPS_DIRECTIONS_URI,
-        forceSafariVC: false,
-        forceWebView: false,
-      )) {
-        Logger.info('Could not launch $GOOGLE_MAPS_DIRECTIONS_URI');
-      }
-    }
-  }
-
   Widget _buildWidgets(BuildContext context) {
     currentJourney = User().getJourney(widget.currentJourneyId);
+    Widget journeyDetailsWidget;
+
+    if (widget.showSingleJourney) {
+      journeyDetailsWidget = Container(
+          child: Column(
+        children: [_buildScaffoldContent(context, currentJourney, 0, 1)],
+      ));
+    } else {
+      pageController = PageController(
+        initialPage: widget.selectedIndex,
+        viewportFraction: 1,
+      );
+
+      visibleIndex = widget.selectedIndex;
+
+      journeyDetailsWidget = PageView(
+        controller: pageController,
+        scrollDirection: Axis.horizontal,
+        onPageChanged: (value) => visibleIndex = value,
+        children: buildJourneys(),
+      );
+    }
 
     return Scaffold(
         appBar: AppBar(
@@ -175,29 +198,12 @@ class _JourneyDetailsState extends State<JourneyDetailsScreen> {
           ),
           automaticallyImplyLeading: true,
           centerTitle: true,
+          foregroundColor: CustomColors.white,
           actions: [
             IconButton(
-              icon: Icon(Icons.navigation),
+              icon: Icon(Icons.map),
               onPressed: () {
-                if (currentJourney != null) {
-                  if (currentJourney!.startAddress != null &&
-                      currentJourney!.startAddress!.location != null) {
-                    _shareLocation(
-                        context,
-                        currentJourney!.startAddress!.location!.lat.toString(),
-                        currentJourney!.startAddress!.location!.lng.toString());
-                  } else {
-                    _showDialog(
-                        AppLocalizations.of(context)!.dialogErrorTitle,
-                        AppLocalizations.of(context)!.dialogGenericErrorText,
-                        context);
-                  }
-                } else {
-                  _showDialog(
-                      AppLocalizations.of(context)!.dialogErrorTitle,
-                      AppLocalizations.of(context)!.dialogGenericErrorText,
-                      context);
-                }
+                _showMap(context, false);
               },
             )
           ],
@@ -212,184 +218,288 @@ class _JourneyDetailsState extends State<JourneyDetailsScreen> {
             ),
           ),
         ),
-        body: Container(
-          child: Column(
-            children: [_buildScaffoldContent(context)],
-          ),
-        ));
+        body: journeyDetailsWidget);
   }
 
-  Widget _buildScaffoldContent(BuildContext context) {
+  void _showMap(BuildContext context, bool showBusStopMarkers) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (BuildContext context) => new UserMap(
+          currentJourney: allJourneys[visibleIndex], showBusStopMarkers: false),
+    ));
+  }
+
+  Widget _buildScaffoldContent(
+      BuildContext context, journey, int indexJourney, int numberJourneys) {
     bool showUpdateButton = widget.showButtonToMyJourneys &&
         defaultTargetPlatform != TargetPlatform.android &&
         defaultTargetPlatform != TargetPlatform.iOS;
+    currentJourney = journey;
 
-    return Flexible(
-      child: ListView(
+    Widget listView = ListView(
+      children: [
+        _buildHeaderContainer(indexJourney, numberJourneys),
+        _buildPaddingTop(15),
+        _buildStartDestinationContainer(),
+        _buildPaddingTop(15),
+        _buildDivider(),
+        _buildDepartureTimeRow(currentJourney),
+        _buildDivider(),
+        _buildEstimatedArrivalContainer(),
+        Offstage(
+          offstage: !User().useDirectus,
+          child: _buildDivider(),
+        ),
+        _buildRequestStateRow(currentJourney),
+        _buildDivider(),
+        _buildSeatsContainer(),
+        _buildDivider(),
+        _buildWheelcairRow(currentJourney),
+        _buildDivider(),
+        _buildRequestedVehicleTypeRow(currentJourney),
+        _buildDivider(),
+        Offstage(offstage: !showUpdateButton, child: _buildPaddingTop(10)),
+        _buildUpdateTourButton(showUpdateButton),
+        _buildPaddingTop(10),
+        _buildButtonContainer(),
+        _buildPaddingTop(10),
+        _buildMyJourneysButton(),
+        _buildPaddingBottom(20),
+      ],
+    );
+
+    if (numberJourneys > 1) {
+      return listView;
+    }
+
+    return Flexible(child: listView);
+  }
+
+  Widget _buildPaddingTop(double padding) {
+    return Padding(padding: EdgeInsets.only(top: padding));
+  }
+
+  Widget _buildPaddingBottom(double padding) {
+    return Padding(padding: EdgeInsets.only(bottom: padding));
+  }
+
+  Widget _buildRequestedVehicleTypeRow(Journey? currentJourney) {
+    return _buildRow(
+        Text(AppLocalizations.of(context)!.vehicle),
+        currentJourney == null
+            ? Text(Utils.NO_DATA)
+            : Text(currentJourney!.getRequestVehicletypeString(context)),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
+  }
+
+  Widget _buildWheelcairRow(Journey? currentJourney) {
+    return _buildRow(
+        Text(AppLocalizations.of(context)!.addionalWheelchairSeats),
+        currentJourney == null
+            ? Text(Utils.NO_DATA)
+            : Text(currentJourney!.seatsWheelchair.toString()),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
+  }
+
+  Widget _buildDepartureTimeRow(Journey? currentJourney) {
+    return _buildRow(
+        Text(AppLocalizations.of(context)!.bookedOn),
+        currentJourney == null
+            ? Text(Utils.NO_DATA)
+            : Text(Utils().getDateAsString(currentJourney!.departureTime)),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
+  }
+
+  Widget _buildRequestStateRow(Journey? currentJourney) {
+    return _buildRow(
+        Text(AppLocalizations.of(context)!.journeyStatus),
+        currentJourney == null
+            ? Text(Utils.NO_DATA)
+            : Text(currentJourney!.getRequestStateString(context)),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
+  }
+
+  Widget _buildUpdateTourButton(bool showUpdateButton) {
+    return Offstage(
+      offstage: !showUpdateButton,
+      child: Container(
+        margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
+        width: double.infinity,
+        child: Consumer<User>(
+          builder: (context, user, child) => ElevatedButton(
+            onPressed: () async {
+              _updateTour();
+            },
+            child: User().isProcessing
+                ? CircularProgressIndicator()
+                : Text(AppLocalizations.of(context)!.updateJourney),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderContainer(int indexJourney, int numberJourneys) {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(color: CustomColors.green),
+      child: _getBookingCode(indexJourney, numberJourneys),
+    );
+  }
+
+  Widget _buildMyJourneysButton() {
+    return Offstage(
+      offstage: !widget.showButtonToMyJourneys,
+      child: Container(
+        margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
+        width: double.infinity,
+        child: Consumer<User>(
+          builder: (context, user, child) => ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context, true);
+            },
+            child: Text(AppLocalizations.of(context)!.switchToJourneyList),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 20,
+      thickness: 1,
+    );
+  }
+
+  Widget _buildStartDestinationContainer() {
+    return Container(
+      alignment: Alignment.topLeft,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Container(
-            height: 50,
-            decoration: BoxDecoration(color: CustomColors.green),
-            child: _buildRow(
-                Text(AppLocalizations.of(context)!.ticketCode),
-                currentJourney == null
-                    ? Text(Utils.NO_DATA)
-                    : Text(currentJourney!.id.toString()),
-                mainAxisAlignment: MainAxisAlignment.spaceBetween),
-          ),
-          Padding(padding: EdgeInsets.only(top: 15)),
-          Container(
-            alignment: Alignment.topLeft,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                _buildAddressRow(
-                    AppLocalizations.of(context)!.selectRouteFromLabel,
-                    currentJourney == null
-                        ? Utils.NO_DATA
-                        : currentJourney!.startAddress!.label!),
-                _buildAddressRow(
-                    AppLocalizations.of(context)!.selectRouteToLabel,
-                    currentJourney == null
-                        ? Utils.NO_DATA
-                        : currentJourney!.destinationAddress!.label!),
-              ],
-            ),
-          ),
-          Padding(padding: EdgeInsets.only(top: 15)),
-          const Divider(
-            height: 20,
-            thickness: 1,
-          ),
-          _buildRow(
-              Text(AppLocalizations.of(context)!.bookedOn),
+          _buildAddressRow(
+              AppLocalizations.of(context)!.selectRouteFromLabel,
               currentJourney == null
-                  ? Text(Utils.NO_DATA)
-                  : Text(
-                      Utils().getDateAsString(currentJourney!.departureTime)),
-              mainAxisAlignment: MainAxisAlignment.spaceBetween),
-          const Divider(
-            height: 20,
-            thickness: 1,
-          ),
-          Offstage(
-            offstage: !User().useDirectus,
-            child: _buildRow(
-                Text(AppLocalizations.of(context)!.estimatedArrival),
-                currentJourney == null
-                    ? Text(Utils.NO_DATA)
-                    : Text(Utils()
-                        .getDateAsString(currentJourney!.estimatedArrivalTime)),
-                mainAxisAlignment: MainAxisAlignment.spaceBetween),
-          ),
-          Offstage(
-            offstage: !User().useDirectus,
-            child: const Divider(
-              height: 20,
-              thickness: 1,
-            ),
-          ),
-          _buildRow(
-              Text(AppLocalizations.of(context)!.journeyStatus),
+                  ? Utils.NO_DATA
+                  : currentJourney!.startAddress!.label!),
+          _buildAddressRow(
+              AppLocalizations.of(context)!.selectRouteToLabel,
               currentJourney == null
-                  ? Text(Utils.NO_DATA)
-                  : Text(currentJourney!.getRequestStateString(context)),
-              mainAxisAlignment: MainAxisAlignment.spaceBetween),
-          const Divider(
-            height: 20,
-            thickness: 1,
-          ),
-          Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: 15,
-              vertical: 15,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  flex: 1,
-                  child: Text(AppLocalizations.of(context)!.numberSeats),
-                ),
-                Flexible(
-                  flex: 3,
-                  child: currentJourney == null
-                      ? Text(Utils.NO_DATA)
-                      : Text(currentJourney!.seats.toString()),
-                ),
-              ],
-            ),
-          ),
-          const Divider(
-            height: 20,
-            thickness: 1,
-          ),
-          _buildRow(
-              Text(AppLocalizations.of(context)!.addionalWheelchairSeats),
-              currentJourney == null
-                  ? Text(Utils.NO_DATA)
-                  : Text(currentJourney!.seatsWheelchair.toString()),
-              mainAxisAlignment: MainAxisAlignment.spaceBetween),
-          const Divider(
-            height: 20,
-            thickness: 1,
-          ),
-          Offstage(
-              offstage: !showUpdateButton,
-              child: Padding(padding: EdgeInsets.only(top: 10))),
-          Offstage(
-            offstage: !showUpdateButton,
-            child: Container(
-              margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
-              width: double.infinity,
-              child: Consumer<User>(
-                builder: (context, user, child) => ElevatedButton(
-                  onPressed: () async {
-                    _updateTour();
-                  },
-                  child: User().isProcessing
-                      ? CircularProgressIndicator()
-                      : Text(AppLocalizations.of(context)!.updateJourney),
-                ),
-              ),
-            ),
-          ),
-          Padding(padding: EdgeInsets.only(top: 10)),
-          Container(
-            margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
-            width: double.infinity,
-            child: Consumer<User>(
-              builder: (context, user, child) => ElevatedButton(
-                onPressed: () async {
-                  _confirmRevokeDialog(context);
-                },
-                child: User().isProcessing
-                    ? CircularProgressIndicator()
-                    : Text(AppLocalizations.of(context)!.cancelJourney),
-              ),
-            ),
-          ),
-          Padding(padding: EdgeInsets.only(top: 10)),
-          Offstage(
-            offstage: !widget.showButtonToMyJourneys,
-            child: Container(
-              margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
-              width: double.infinity,
-              child: Consumer<User>(
-                builder: (context, user, child) => ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context, true);
-                  },
-                  child:
-                      Text(AppLocalizations.of(context)!.switchToJourneyList),
-                ),
-              ),
-            ),
-          ),
-          Padding(padding: EdgeInsets.only(bottom: 20)),
+                  ? Utils.NO_DATA
+                  : currentJourney!.destinationAddress!.label!),
         ],
       ),
+    );
+  }
+
+  Widget _buildButtonContainer() {
+    return Container(
+      margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
+      width: double.infinity,
+      child: Consumer<User>(
+        builder: (context, user, child) => ElevatedButton(
+          onPressed: () async {
+            _confirmRevokeDialog(context);
+          },
+          child: User().isProcessing
+              ? CircularProgressIndicator()
+              : Text(AppLocalizations.of(context)!.cancelJourney),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEstimatedArrivalContainer() {
+    return Offstage(
+      offstage: !User().useDirectus,
+      child: _buildRow(
+          Text(AppLocalizations.of(context)!.estimatedArrival),
+          currentJourney == null
+              ? Text(Utils.NO_DATA)
+              : Text(Utils()
+                  .getDateAsString(currentJourney!.estimatedArrivalTime)),
+          mainAxisAlignment: MainAxisAlignment.spaceBetween),
+    );
+  }
+
+  Widget _buildSeatsContainer() {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 15,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            flex: 1,
+            child: Text(AppLocalizations.of(context)!.numberSeats),
+          ),
+          Flexible(
+            flex: 3,
+            child: currentJourney == null
+                ? Text(Utils.NO_DATA)
+                : Text(currentJourney!.seats.toString()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getBookingCode(int index, int numberJourneys) {
+    bool showQrCode = (currentJourney!.bus != null &&
+        currentJourney!.bus!.vehicletype == VehicleType.autonomousShuttle);
+
+    if (widget.showSingleJourney) {
+      return InkWell(
+        child: _buildRow(
+          Text(AppLocalizations.of(context)!.ticketCode),
+          currentJourney == null
+              ? Text(Utils.NO_DATA)
+              : showQrCode
+                  ? Icon(
+                      Icons.arrow_forward_ios_outlined,
+                      color: CustomColors.black,
+                      size: 20,
+                    )
+                  : Text(currentJourney!.id.toString()),
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+        onTap: () {
+          if (showQrCode) {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  new QrCodeScreen(currentJourney: currentJourney),
+            ));
+          }
+        },
+      );
+    }
+
+    return InkWell(
+      child: _buildHeadRow(
+        Text(AppLocalizations.of(context)!.ticketCode),
+        currentJourney == null
+            ? Text(Utils.NO_DATA)
+            : showQrCode
+                ? Icon(
+                    Icons.arrow_forward_ios_outlined,
+                    color: CustomColors.black,
+                    size: 20,
+                  )
+                : Text(currentJourney!.id.toString()),
+        Text("($index / $numberJourneys)"),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      onTap: () {
+        if (showQrCode) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) =>
+                new QrCodeScreen(currentJourney: currentJourney),
+          ));
+        }
+      },
     );
   }
 
@@ -431,16 +541,29 @@ class _JourneyDetailsState extends State<JourneyDetailsScreen> {
   Widget _buildRow(Widget widget1, Widget widget2,
       {MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start}) {
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 5,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       child: Row(
         mainAxisAlignment: mainAxisAlignment,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(width: 150, child: widget1),
           widget2,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeadRow(Widget widget1, Widget widget2, Widget widget3,
+      {MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start}) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      child: Row(
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(width: 150, child: widget1),
+          Container(width: 150, child: widget2),
+          widget3,
         ],
       ),
     );

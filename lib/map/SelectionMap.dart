@@ -218,6 +218,7 @@ class _SelectionMapState extends State<SelectionMap>
         ),
         automaticallyImplyLeading: true,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         title: Text(AppLocalizations.of(context)!.map),
         leading: IconButton(
           onPressed: () {

@@ -53,6 +53,7 @@ class _SelectFavoritesState extends State<SelectFavorites> {
         ),
         automaticallyImplyLeading: true,
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         title: Text(AppLocalizations.of(context)!.favoriteTitle),
         leading: IconButton(
           onPressed: () {

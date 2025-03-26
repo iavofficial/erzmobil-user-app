@@ -8,6 +8,7 @@ import 'dart:math';
 class Utils {
   static final int RADIUS_OF_EARTH_IN_KILOMETER = 6371;
   static final String NO_DATA = "---";
+  static final String EMPTY = "";
   static final String OSM_URL = 'https://www.openstreetmap.org/copyright/de';
 
   String getDateAsString(DateTime? date) {

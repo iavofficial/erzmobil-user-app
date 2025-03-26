@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:erzmobil/debug/Logger.dart';
 import 'package:erzmobil/location/LocationManager.dart';
 import 'package:erzmobil/model/BusStop.dart';
@@ -15,11 +13,21 @@ import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../Constants.dart';
+import '../model/Journey.dart';
 
 class UserMap extends StatefulWidget {
-  const UserMap({Key? key}) : super(key: key);
+  final bool showBusStopMarkers;
+  final bool showStartEndStation;
+  final Journey? currentJourney;
+
+  const UserMap(
+      {Key? key,
+      this.currentJourney,
+      this.showBusStopMarkers = true,
+      this.showStartEndStation = true})
+      : super(key: key);
 
   @override
   _UserMapState createState() => _UserMapState();
@@ -111,29 +119,72 @@ class _UserMapState extends State<UserMap>
       busStopMarkers!.clear();
     }
 
+    void _addMarker(BusStop stop, {startFlag = true}) {
+      var icon;
+      bool isCurrentNode = selectedBusStop == stop;
+      if (startFlag == true) {
+        icon = Image.asset(Strings.assetPathLocationMarker,
+            scale: 1, color: Colors.blue[900]);
+      } else {
+        icon = Image.asset(Strings.assetPathLocationEndMarker,
+            scale: 1, color: Colors.blue[900]);
+      }
+
+      Marker stopMarker = Marker(
+        width: isCurrentNode ? 100.0 : 70.0,
+        height: isCurrentNode ? 100.0 : 70.0,
+        anchorPos: AnchorPos.align(AnchorAlign.center),
+        point: stop.position!,
+        builder: (ctx) => Container(
+          child: IconButton(
+              alignment: Alignment.bottomCenter,
+              icon: icon,
+              onPressed: () {
+                onMarkerClicked(stop);
+              }),
+        ),
+      );
+      busStopMarkers!.add(stopMarker);
+    }
+
     if (_busStops != null) {
       _busStops!.forEach((BusStop stop) {
         if (stop.position != null) {
-          bool isCurrentNode = selectedBusStop == stop;
-          Marker stopMarker = Marker(
-            width: isCurrentNode ? 100.0 : 70.0,
-            height: isCurrentNode ? 100.0 : 70.0,
-            anchorPos: AnchorPos.align(AnchorAlign.center),
-            point: stop.position!,
-            builder: (ctx) => Container(
-              child: IconButton(
-                  alignment: Alignment.bottomCenter,
-                  icon: Image.asset(
-                    Strings.assetPathLocationMarker,
-                    scale: 1,
-                  ),
-                  onPressed: () {
-                    onMarkerClicked(stop);
-                  }),
-            ),
-          );
-
-          busStopMarkers!.add(stopMarker);
+          if (widget.showStartEndStation == true &&
+              (stop.position!.latitude ==
+                      widget.currentJourney!.startAddress!.location!.lat &&
+                  stop.position!.longitude ==
+                      widget.currentJourney!.startAddress!.location!.lng)) {
+            _addMarker(stop, startFlag: true);
+          } else if (widget.showStartEndStation == true &&
+              stop.position!.latitude ==
+                  widget.currentJourney!.destinationAddress!.location!.lat &&
+              stop.position!.longitude ==
+                  widget.currentJourney!.destinationAddress!.location!.lng) {
+            _addMarker(stop, startFlag: false);
+          } else {
+            if (widget.showBusStopMarkers) {
+              bool isCurrentNode = selectedBusStop == stop;
+              Marker stopMarker = Marker(
+                width: isCurrentNode ? 100.0 : 70.0,
+                height: isCurrentNode ? 100.0 : 70.0,
+                anchorPos: AnchorPos.align(AnchorAlign.center),
+                point: stop.position!,
+                builder: (ctx) => Container(
+                  child: IconButton(
+                      alignment: Alignment.bottomCenter,
+                      icon: Image.asset(
+                        Strings.assetPathLocationMarker,
+                        scale: 1,
+                      ),
+                      onPressed: () {
+                        onMarkerClicked(stop);
+                      }),
+                ),
+              );
+              busStopMarkers!.add(stopMarker);
+            }
+          }
         }
       });
 
@@ -278,32 +329,126 @@ class _UserMapState extends State<UserMap>
     }
   }
 
+  Future<void> _shareLocation(
+      BuildContext context, String lat, String lng) async {
+    Logger.debug("shareLocation: " + lat + ", " + lng);
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      assert(lat.isNotEmpty);
+      final params = <String, String>{
+        'lat': lat,
+        'lng': lng,
+      };
+
+      const platform = MethodChannel('erzmobil.native/share');
+      try {
+        await platform.invokeMethod('shareLocation', params);
+      } on PlatformException catch (e) {
+        _showDialog(AppLocalizations.of(context)!.dialogErrorTitle,
+            AppLocalizations.of(context)!.dialogGenericErrorText, context);
+        Logger.e("Sharing location failed");
+      }
+    } else {
+      String GOOGLE_MAPS_DIRECTIONS_URI =
+          "https://www.google.com/maps/dir/?api=1&destination=$lat,$lng";
+
+      if (!await launch(
+        GOOGLE_MAPS_DIRECTIONS_URI,
+        forceSafariVC: false,
+        forceWebView: false,
+      )) {
+        Logger.info('Could not launch $GOOGLE_MAPS_DIRECTIONS_URI');
+      }
+    }
+  }
+
+  Future<void> _showDialog(
+      String title, String message, BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title, style: CustomTextStyles.title),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  message,
+                  style: CustomTextStyles.bodyGrey,
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                AppLocalizations.of(context)!.okay,
+                style: CustomTextStyles.bodyMint,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Logger.info('Widget build');
 
     return Scaffold(
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[CustomColors.mint, CustomColors.marine])),
-        ),
-        automaticallyImplyLeading: true,
-        centerTitle: true,
-        title: Text(AppLocalizations.of(context)!.map),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(
-            Icons.arrow_back,
-            color: CustomColors.backButtonIconColor,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[CustomColors.mint, CustomColors.marine])),
           ),
-        ),
-      ),
+          automaticallyImplyLeading: true,
+          centerTitle: true,
+          foregroundColor: CustomColors.white,
+          title: Text(AppLocalizations.of(context)!.map),
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              color: CustomColors.backButtonIconColor,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.navigation),
+              onPressed: () {
+                if (widget.currentJourney != null) {
+                  if (widget.currentJourney!.startAddress != null &&
+                      widget.currentJourney!.startAddress!.location != null) {
+                    _shareLocation(
+                        context,
+                        widget.currentJourney!.startAddress!.location!.lat
+                            .toString(),
+                        widget.currentJourney!.startAddress!.location!.lng
+                            .toString());
+                  } else {
+                    _showDialog(
+                        AppLocalizations.of(context)!.dialogErrorTitle,
+                        AppLocalizations.of(context)!.dialogGenericErrorText,
+                        context);
+                  }
+                } else {
+                  _showDialog(
+                      AppLocalizations.of(context)!.dialogErrorTitle,
+                      AppLocalizations.of(context)!.dialogGenericErrorText,
+                      context);
+                }
+              },
+            ),
+          ]),
       body: _buildMap(),
     );
   }

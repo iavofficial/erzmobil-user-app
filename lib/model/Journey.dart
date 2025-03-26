@@ -1,8 +1,9 @@
 import 'package:erzmobil/debug/Logger.dart';
+import 'package:erzmobil/model/Bus.dart';
 import 'package:erzmobil/model/Location.dart';
+import 'package:erzmobil/model/VehicleType.dart';
 import 'package:erzmobil/utils/Utils.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Journey {
@@ -22,6 +23,7 @@ class Journey {
   final String? ticketType;
   final DateTime? creationDate;
   String? favoriteName;
+  Bus? bus;
 
   Journey(
       this.id,
@@ -39,6 +41,7 @@ class Journey {
       this.cancelledOn,
       this.ticketType,
       this.creationDate,
+      this.bus,
       {this.favoriteName = ""});
 
   factory Journey.fromJson(Map<String, dynamic> json) {
@@ -66,6 +69,7 @@ class Journey {
             : null,
         json['ticketType'] != null ? json['ticketType'] as String : null,
         null,
+        json['bus'] != null ? new Bus.fromJsonDirectus(json['bus']) : null,
         favoriteName: json['favoriteName'] != null
             ? json['favoriteName'] as String
             : null);
@@ -100,6 +104,7 @@ class Journey {
         json['date_created'] != null
             ? DateTime.parse(json['date_created'] as String)
             : null,
+        json['bus'] != null ? new Bus.fromJsonDirectus(json['bus']) : null,
         favoriteName: json['favoriteName'] != null
             ? json['favoriteName'] as String
             : null);
@@ -142,22 +147,6 @@ class Journey {
     return encodedDepartureTime;
   }
 
-  /*Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.startAddress != null) {
-      data['startAddress'] = this.startAddress!.toJson();
-    }
-    if (this.destinationAddress != null) {
-      data['destinationAddress'] = this.destinationAddress!.toJson();
-    }
-    data['time'] = getFormatISOTime(departureTime!);
-    data['isDeparture'] = this.isDeparture;
-    data['seats'] = this.seats;
-    data['seatsWheelchair'] = this.seatsWheelchair;
-    data['ticketType'] = this.ticketType;
-    return data;
-  }*/
-
   Map<String, dynamic> toJson() {
     return {
       "startAddress": this.startAddress!.toJson(),
@@ -169,6 +158,7 @@ class Journey {
       "seats": this.seats,
       "seatsWheelchair": this.seatsWheelchair,
       "ticketType": this.ticketType,
+      "bus": this.bus,
       "favoriteName": this.favoriteName
     };
   }
@@ -186,6 +176,7 @@ class Journey {
       data['destination_address_id'] = this.destinationAddress!.id;
     }
     data['ticketType'] = this.ticketType;
+    data['bus'] = this.bus;
     if (this.favoriteName != null) {
       data['favoriteName'] = this.favoriteName;
     }
@@ -217,8 +208,33 @@ class Journey {
     if (this.cancellationReason != null) {
       data['cancellationReason'] = this.cancellationReason;
     }
+    data['bus'] = this.bus;
     data['ticketType'] = this.ticketType;
     Logger.info(data.toString());
+  }
+
+  String getRequestVehicletypeString(BuildContext context) {
+    if (bus == null) {
+      return AppLocalizations.of(context)!.electrifiedBus;
+    } else {
+      String licensePlate =
+          bus!.licenseplate == null ? Utils.EMPTY : ", " + bus!.licenseplate!;
+      String vehicleType;
+      switch (bus!.vehicletype) {
+        case VehicleType.autonomousShuttle:
+          vehicleType = AppLocalizations.of(context)!.autonomousShuttle;
+          break;
+        case VehicleType.other:
+          vehicleType = AppLocalizations.of(context)!.other;
+          break;
+        case VehicleType.electrifiedBus:
+        default:
+          Logger.info("Journey vehicletype is ${bus!.vehicletype}");
+          vehicleType = AppLocalizations.of(context)!.electrifiedBus;
+      }
+
+      return vehicleType + licensePlate;
+    }
   }
 }
 

@@ -157,8 +157,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   padding: EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 15.0),
                   shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(10.0)),
-                  onPrimary: Colors.white,
-                  primary: CustomColors.mint),
+                  foregroundColor: Colors.white,
+                  backgroundColor: CustomColors.mint),
               child: User().isProgressLogout
                   ? new CircularProgressIndicator()
                   : Text(

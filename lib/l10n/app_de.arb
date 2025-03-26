@@ -117,6 +117,7 @@
     },
     "negativeTimeInPast": "Die gewünschte Fahrzeit ist für das ERZmobil zu kurzfristig. Bitte versuchen Sie eine spätere Ankunfts- oder Abfahrtszeit.",
     "negativeNoCommunity": "Die Buchungsanfrage ist unzulässig, da ERZmobil nur Fahrten innerhalb der Gemeinde Zwönitz anbietet.",
+    "negativeNoSeatsSelected": "Die Eingaben sind unzulässig, da mindestens ein Sitzplatz ausgewählt sein muss. Die Anzahl der Sitzplätze wurde zurückgesetzt.",
     "negativeNoStopInArea": "Die Buchungsanfrage ist unzulässig, da Start- oder Endpunkt keine bekannten Haltestellen sind.",
     "negativeSameStops": "Die Buchungsanfrage ist unzulässig, da Start- oder Endpunkt identisch sind.",
     "negativeSameFavoriteStops": "Die Eingaben sind unzulässig, da Start- und Endpunkt identisch sind.",
@@ -242,5 +243,10 @@
     "suggestAlternativesText": "Flexible Buchungszeit",
     "suggestAlternativesEarlier": "früher",
     "suggestAlternativesLater": "später",
-    "suggestAlternativesNo": "nein"
+    "suggestAlternativesNo": "nein",
+    "vehicle": "Fahrzeug",
+    "electrifiedBus": "elektrisch",
+    "autonomousShuttle": "autonom",
+    "other": "andere",
+    "qrCodeNeedHelp": "Benötigen Sie Hilfe?"
 }

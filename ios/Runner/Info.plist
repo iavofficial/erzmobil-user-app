@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -44,12 +46,14 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>If you allow Erzmobil to find your location, we can show your location on the map which makes it easier for you to find bus stops nearby.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>If you allow Erzmobil to find your location, we can show your location on the map which makes it easier for you to find bus stops nearby.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
 	<string>If you allow Erzmobil to find your location, we can show your location on the map which makes it easier for you to find bus stops nearby.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>If you allow Erzmobil to find your location, we can show your location on the map which makes it easier for you to find bus stops nearby.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

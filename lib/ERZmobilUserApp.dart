@@ -28,59 +28,81 @@ class ERZmobilUserApp extends StatelessWidget {
             const Locale('de'),
           ],
           highContrastTheme: ThemeData(
+            dialogBackgroundColor: CustomColors.white,
+            inputDecorationTheme: InputDecorationTheme(
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: CustomColors.lightGrey))),
             brightness: Brightness.light,
             primaryColor: CustomColors.black,
             primarySwatch:
                 CustomColors.white, //createMaterialColor(Color(0xff419eb1)),
-            primaryTextTheme: TextTheme(headline6: CustomTextStyles.titleWhite),
+            primaryTextTheme:
+                TextTheme(titleLarge: CustomTextStyles.titleWhite),
             colorScheme: ColorScheme.fromSwatch()
                 .copyWith(secondary: CustomColors.white),
             scaffoldBackgroundColor: CustomColors.white,
             cardTheme: CardTheme(
               color: CustomColors.black,
             ),
+            dividerTheme: const DividerThemeData(
+              color: CustomColors.lightGrey,
+            ),
             iconTheme: IconThemeData(
                 color: CustomColors.white, opacity: 1.0, size: 40.0),
             textTheme: TextTheme(
-              headline6: CustomTextStyles.title,
-              bodyText2: CustomTextStyles.bodyBlack,
-              button: CustomTextStyles.bodyWhite,
+              titleLarge: CustomTextStyles.title,
+              bodyMedium: CustomTextStyles.bodyBlack,
+              labelLarge: CustomTextStyles.bodyWhite,
             ),
             textSelectionTheme: TextSelectionThemeData(
               cursorColor: CustomColors.anthracite,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                  onPrimary: Colors.white, primary: CustomColors.marine),
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(5.0)),
+                  backgroundColor: CustomColors.marine,
+                  foregroundColor: Colors.white),
             ),
             fontFamily: 'SourceSansPro',
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
           theme: ThemeData(
+            dialogBackgroundColor: CustomColors.white,
+            inputDecorationTheme: InputDecorationTheme(
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: CustomColors.lightGrey))),
             brightness: Brightness.light,
             primaryColor: CustomColors.darkGrey,
             primarySwatch:
                 CustomColors.white, //createMaterialColor(Color(0xff419eb1)),
-            primaryTextTheme: TextTheme(headline6: CustomTextStyles.titleWhite),
+            primaryTextTheme:
+                TextTheme(titleLarge: CustomTextStyles.titleWhite),
             colorScheme:
                 ColorScheme.fromSwatch().copyWith(secondary: CustomColors.mint),
             scaffoldBackgroundColor: CustomColors.white,
             cardTheme: CardTheme(
               color: CustomColors.anthracite,
             ),
+            dividerTheme: const DividerThemeData(
+              color: CustomColors.lightGrey,
+            ),
             iconTheme: IconThemeData(
                 color: CustomColors.white, opacity: 1.0, size: 40.0),
             textTheme: TextTheme(
-              headline6: CustomTextStyles.title,
-              bodyText2: CustomTextStyles.bodyGrey,
-              button: CustomTextStyles.bodyWhite,
+              titleLarge: CustomTextStyles.title,
+              bodyMedium: CustomTextStyles.bodyGrey,
+              labelLarge: CustomTextStyles.bodyWhite,
             ),
             textSelectionTheme: TextSelectionThemeData(
               cursorColor: CustomColors.anthracite,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                  onPrimary: Colors.white, primary: CustomColors.mint),
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(5.0)),
+                  backgroundColor: CustomColors.mint,
+                  foregroundColor: CustomColors.white),
             ),
             fontFamily: 'SourceSansPro',
             visualDensity: VisualDensity.adaptivePlatformDensity,

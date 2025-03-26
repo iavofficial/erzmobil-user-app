@@ -18,6 +18,19 @@ class JourneyListView extends StatelessWidget {
   final List<Journey> journeys;
   final bool showArrow;
 
+  Widget _journeyDetailsScreen(int index, int numberJourneys) {
+    if (numberJourneys > 1) {
+      return new JourneyDetailsScreen.multipleJourneys(
+          currentJourneyId: journeys[index].id,
+          selectedIndex: index,
+          numberTotalJourneys: journeys.length,
+          showButtonToMyJourneys: false);
+    }
+
+    return new JourneyDetailsScreen.singleJourney(
+        currentJourneyId: journeys[index].id, showButtonToMyJourneys: false);
+  }
+
   /*
   void _setDebugData(){
     journeys.clear();
@@ -45,9 +58,8 @@ class JourneyListView extends StatelessWidget {
                           builder: (BuildContext context) =>
                               ChangeNotifierProvider.value(
                             value: User(),
-                            child: new JourneyDetailsScreen(
-                                currentJourneyId: journeys[index].id,
-                                showButtonToMyJourneys: false),
+                            child:
+                                _journeyDetailsScreen(index, journeys.length),
                           ),
                         ),
                       );

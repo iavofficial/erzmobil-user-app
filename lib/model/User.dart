@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
@@ -130,6 +131,83 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
   }
 
   User._internal();
+
+  /*Future<void> deleteLogs() async {
+    _setDebugProcessing(true);
+    await FLog.clearLogs();
+    _setDebugProcessing(false);
+  }
+
+  Future<void> sendLogs() async {
+    _setDebugProcessing(true);
+
+    File? logFile;
+    try {
+      logFile = await FLog.exportLogs();
+    } catch (e) {
+      print(e);
+    }
+
+    if (logFile != null && logFile.existsSync()) {
+      //zip file
+      Directory? externalDirectory;
+      File? zipFile;
+      try {
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          externalDirectory = await getApplicationDocumentsDirectory();
+        } else {
+          externalDirectory = await getExternalStorageDirectory();
+        }
+
+        if (externalDirectory != null) {
+          zipFile = File("${externalDirectory.path}/logs.zip");
+          await ZipFile.createFromFiles(
+              sourceDir: logFile.parent, files: [logFile], zipFile: zipFile);
+        }
+      } catch (e) {
+        print(e);
+      }
+
+      if (zipFile != null && zipFile.existsSync()) {
+        //obtain device data
+        StringBuffer buffer = StringBuffer();
+        buffer.write(
+            'Bitte teilen Sie uns mit, warum Sie uns dieses Log schicken.\nPlease tell us why you are sending the log file.\n\n');
+        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+          buffer.write('systemVersion: ${iosInfo.systemVersion} \n');
+          buffer.write('model: ${iosInfo.model} \n');
+          buffer.write('name: ${iosInfo.name} \n');
+        } else {
+          AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+          buffer.write('version.baseOS: ${androidInfo.version.baseOS} \n');
+          buffer.write('manufacturer: ${androidInfo.manufacturer} \n');
+          buffer.write('model: ${androidInfo.model} \n');
+        }
+
+        //sendZip
+        final Email email = Email(
+          body: buffer.toString(),
+          subject: 'Erzmobil User App Logs',
+          recipients: ['erzmobil@smartcity-zwoenitz.de'],
+          attachmentPaths: [zipFile.path],
+          isHTML: false,
+        );
+
+        try {
+          await FlutterEmailSender.send(email);
+        } catch (e) {
+          print(e);
+        }
+        //TODO: handle no Email client found?
+        zipFile.deleteSync();
+      }
+      logFile.deleteSync();
+    }
+
+    _setDebugProcessing(false);
+  }*/
 
   static const sslUrl = 'https://valid-isrgrootx1.letsencrypt.org/';
 
@@ -1259,6 +1337,13 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
       }
     }
     return null;
+  }
+
+  List<Journey>? getBookedJourneys() {
+    if (journeyList != null && journeyList!.bookedJourneys != null) {
+      return journeyList!.bookedJourneys;
+    }
+    return List.empty();
   }
 
   Future<RequestState> deleteOrder(int id) async {

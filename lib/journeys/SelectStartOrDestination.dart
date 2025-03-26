@@ -36,6 +36,7 @@ class SelectStartOrDestination extends StatelessWidget {
           ),
           automaticallyImplyLeading: true,
           centerTitle: true,
+          foregroundColor: CustomColors.white,
           title: Text(screenTitle),
           leading: IconButton(
             onPressed: () {

@@ -137,6 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   colors: <Color>[CustomColors.mint, CustomColors.marine])),
         ),
         centerTitle: true,
+        foregroundColor: CustomColors.white,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);

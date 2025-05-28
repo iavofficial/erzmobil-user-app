@@ -1,3 +1,20 @@
+/**
+ * Copyright © 2025 IAV GmbH Ingenieurgesellschaft Auto und Verkehr, All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import 'dart:async';
 
 import 'package:erzmobil/Constants.dart';
@@ -9,7 +26,6 @@ import 'package:erzmobil/model/Journey.dart';
 import 'package:erzmobil/model/Location.dart';
 import 'package:erzmobil/model/TicketType.dart';
 import 'package:erzmobil/model/User.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -59,9 +75,10 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
 
   String? suggestAlternativesOption;
 
-  List<int> seatOptions = [0, 1, 2, 3, 4, 5, 6];
+  List<int> seatOptionsNoWheelchair = [1, 2, 3, 4, 5, 6];
+  List<int> seatOptionsWithWheelchair = [0, 1, 2, 3, 4, 5];
   late List<int> allowedSeatOptions;
-  List<int> seatsWheelchair = [0, 1];
+  List<int> wheelchairOptions = [0, 1];
   List<String> journeyOptions = [];
   List<TicketType> journeyTypes = [];
   List<String> suggestAlternatives = [];
@@ -69,7 +86,7 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
   @override
   void initState() {
     journeyTypes = User().getTicketTypes();
-    allowedSeatOptions = seatOptions.sublist(1, seatOptions.length - 1);
+    allowedSeatOptions = seatOptionsNoWheelchair;
     suggestAlternativesOption = "";
     startDate = DateTime.now();
     startTime = TimeOfDay.now();
@@ -442,24 +459,9 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
                   Flexible(
                     flex: 2,
                     child: _getSeatsDropDownWidget(
-                        seatsWheelchair, selectedWheelChairs, (int value) {
+                        wheelchairOptions, selectedWheelChairs, (int value) {
                       setState(() {
-                        if (value > 0) {
-                          allowedSeatOptions = seatOptions;
-                        } else {
-                          if (selectedSeats == 0) {
-                            selectedSeats = 1;
-                            _showDialog(
-                                AppLocalizations.of(context)!.dialogInfoTitle,
-                                AppLocalizations.of(context)!
-                                    .negativeNoSeatsSelected,
-                                context,
-                                null);
-                          }
-                          allowedSeatOptions =
-                              seatOptions.sublist(1, seatOptions.length - 1);
-                        }
-                        selectedWheelChairs = value;
+                        _processWheelchairSelection(value);
                       });
                     }),
                   ),
@@ -937,36 +939,6 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
     });
   }
 
-  Widget _getJourneyOptionsDropDownWidget(String value, Function onChanged) {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.centerRight,
-      child: DropdownButton<String>(
-        dropdownColor: CustomColors.white,
-        value: value,
-        icon: const Icon(
-          Icons.arrow_drop_down,
-          color: CustomColors.mint,
-        ),
-        iconSize: 24,
-        elevation: 15,
-        isDense: true,
-        onChanged: (String? newValue) {
-          onChanged(newValue);
-        },
-        items: journeyOptions.map<DropdownMenuItem<String>>((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(
-              value,
-              style: CustomTextStyles.bodyMint,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   Widget _getJourneyOptionButtons(String arrival, String departure) {
     return Container(
       width: double.infinity,
@@ -997,6 +969,32 @@ class _NewJourneyScreenState extends State<NewJourneyScreen> {
         ],
       ),
     );
+  }
+
+  void _processWheelchairSelection(int numberWheelchairs) {
+    selectedWheelChairs = numberWheelchairs;
+    allowedSeatOptions = numberWheelchairs == 1
+        ? seatOptionsWithWheelchair
+        : seatOptionsNoWheelchair;
+    bool noSeatsSelected = numberWheelchairs == 0 && selectedSeats == 0;
+    bool tooManySeatsSelected = numberWheelchairs == 1 && selectedSeats == 6;
+
+    if (noSeatsSelected) {
+      selectedSeats = 1;
+      _showSeatSelectionMismatchHint(
+          AppLocalizations.of(context)!.negativeNoSeatsSelected);
+    }
+
+    if (tooManySeatsSelected) {
+      selectedSeats = 5;
+      _showSeatSelectionMismatchHint(
+          AppLocalizations.of(context)!.negativeTooManySeatsSelected);
+    }
+  }
+
+  void _showSeatSelectionMismatchHint(String message) {
+    _showDialog(
+        AppLocalizations.of(context)!.dialogInfoTitle, message, context, null);
   }
 
   Widget _getSeatsDropDownWidget(
